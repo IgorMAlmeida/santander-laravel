@@ -3,76 +3,92 @@
 namespace App\Services;
 
 use App\Services\Curl;
+use App\Services\BankLogin;
+
 
 class Queues extends Curl{
 
-   private string $urlBase = "https://consignado.santander.com.br/Portal/FI.AC.GUI.FIMENU.aspx";
-   private string $urlAuthorization = "https://consignado.santander.com.br/autorizador45/login/AC.UI.SAN.aspx?paramtp=TOKENCSG&param1=";
-   private string $urlHomeConsigned = "https://www.santandernegocios.com.br/CSG_CREDITO_CONSIGNADO/ASP/CSG_LOGINMBSCSG.ASP";
+    public function getQueue($values):array {
 
+        try{
+            $login = (new BankLogin)->login();
+            $params = $this->getProposalStatus([...$values, ...$login]);
+            $consultProposal = $this->getFinished([...$params]);
 
-   public function getQueue($loginScreen):array {
+            if (isset($consultProposal['mensagem'])) {
+                $login = (new BankLogin)->login();
+                $params = $this->getProposalStatus([...$values, ...$login]);
+                $consultProposal = $this->getProgress([...$params]);
+            }
 
-    try{
+            if($consultProposal['erro']) {
+                throw new \Exception($consultProposal['mensagem']);
+            }
 
-        //request para o menu principal
-        $params = [
-            "urlBase"          => $this->urlBase,
-            "urlAuthorization" => $this->urlAuthorization,
-            "queue"            => true,
-            "urlLogin"         => $loginScreen
-        ];
+            return [
+                "erro"    =>  false,
+                "propostas"=>  $consultProposal['dados']
+            ];
 
-        $queue = $this->send($params);
-        var_dump($queue);exit;
+        }catch (\Exception $e){
+            return [
+                "erro"     =>  true,
+                "response" =>  $e->getMessage()
+            ];
+        }
+    }
 
-
+    private function getProposalStatus($values): array {
         return [
-            "status"    =>  true,
-            "response"  =>  $queue['response']
+            "propostaId" => $values['propostaId'],
+            "curlHandle" => $values['response'],
+            "cookieFile" => $values['cookieFile']
         ];
-
-        }catch (\Exception $e){
-            return [
-                "status"    =>  false,
-                "response"  =>  $e->getMessage()
-            ];
-        }
     }
 
-    private function getQueueFinished():array {
+    private function getFinished($values):array {
 
         try{
-    
-        
+            $consultProposal = $this->esteira([...$values, 'finished' => true]);
+            if($consultProposal['erro']) {
+                throw new \Exception($consultProposal['mensagem']);
+            }
+
             return [
-                "status"    =>  true,
-                "response"  =>  "response"
+                "erro" =>  false,
+                "dados"=>  $consultProposal['dados']
             ];
-    
+
         }catch (\Exception $e){
             return [
-                "status"    =>  false,
-                "response"  =>  $e->getMessage()
+                "erro"     =>  true,
+                "mensagem" =>  $e->getMessage()
             ];
         }
     }
 
-    private function getQueueProgress():array {
+
+    private function getProgress($values):array {
 
         try{
-    
-        
+
+            $consultProposal = $this->esteira([...$values, 'progress' => true]);
+
+            if($consultProposal['erro']) {
+                throw new \Exception($consultProposal['mensagem']);
+            }
+
             return [
-                "status"    =>  true,
-                "response"  =>  "response"
+                "erro"    =>  false,
+                "dados"=>  $consultProposal['dados']
             ];
-    
+
         }catch (\Exception $e){
             return [
-                "status"    =>  false,
-                "response"  =>  $e->getMessage()
+                "erro"     =>  true,
+                "mensagem" =>  $e->getMessage()
             ];
         }
     }
-}   
+
+}

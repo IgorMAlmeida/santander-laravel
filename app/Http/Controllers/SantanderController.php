@@ -2,37 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\BankLogin;
 use App\Services\Queues;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use App\Services\BankLogin;
+
 
 class SantanderController extends Controller
 {
-    public function Esteira()
+    public function Esteira(Request $request)
     {
-
         try {
-            $login = (new BankLogin)->login();
-            var_dump($login);exit;
 
-            // $getProposalData = (new Queues)->getQueue($login['response']);
-
-            // var_dump($getProposalData);exit;
-            
-            if(!$login['status']){
-               throw new \Exception($login['response']);
-            }
-
-            return [
-                "status"    =>  true,
-                "response"  =>  $login['response']
+            session_start();
+            $params = [
+                "propostaId" => $request->input('propostaId')
             ];
 
+            $getProposalData = (new Queues)->getQueue($params);
+
+            if($getProposalData['erro']){
+               throw new \Exception($getProposalData['response']);
+            }
+
+            return response()->json([
+                "erro"  =>  false,
+                "dados" =>  [
+                    'propostas' => $getProposalData['propostas']
+            ]
+            ]);
+
         }catch (\Exception $e) {
-            //a forma de retorno padrao acho q nao é essa// conferir antes de termianr
             return [
-                "status"    =>  false,
-                "response"  =>  $e->getMessage()
+                "erro"  =>  true,
+                "dados" =>  $e->getMessage()
             ];
         }
     }
