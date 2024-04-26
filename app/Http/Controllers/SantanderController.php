@@ -29,6 +29,10 @@ class SantanderController extends Controller
                 $getProposalData = (new Queues)->getQueue([...$queueParams, 'progress' => true]);
             }
 
+            if($getProposalData['erro']){
+                throw new \Exception($getProposalData['response']);
+            }
+
             unlink($login['cookieFile']);
             return response()->json([
                 "erro"  =>  false,

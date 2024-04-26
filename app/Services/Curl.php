@@ -70,22 +70,6 @@ class Curl
 
     }
 
-    public function getHiddens($return) : array {
-        
-        preg_match_all('/<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="(.*?)" \/>/', $return, $hiddens);
-        $eventValidation = $hiddens[1][0];
-        preg_match_all('/<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="(.*?)" \/>/', $return, $hiddens);
-        $viewState = $hiddens[1][0];
-        preg_match_all('/<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="(.*?)" \/>/', $return, $hiddens);
-        $viewStateGenerator = $hiddens[1][0];
-
-        return [
-            'eventValidation'    => $eventValidation,
-            'viewState'          => $viewState,
-            'viewStateGenerator' => $viewStateGenerator
-        ];
-    }
-
     public function esteira($values)
     {
         try{
@@ -99,6 +83,9 @@ class Curl
             $return = curl_exec($this->httpReceita);
 
             $hiddenFields = (new Hiddens())->getHiddens($return);
+            if($hiddenFields['erro']) {
+                throw new \Exception($hiddenFields['response']);
+            }
             $variables = (new Variables())->setVariables(
                 [...$hiddenFields,
                 'eventTarget' => 'ctl00$ContentPlaceHolder1$j0$j1$DataListMenu$ctl00$LinkButton2'
@@ -151,6 +138,7 @@ class Curl
 
             ### Pegando status da proposta
             preg_match_all('/ctl00_cph_ucAprCns_j0_j1_grConsulta"(.*)<\/table>/s', $return, $valueStatus);
+
             if(empty($valueStatus[0]) && empty($valueStatus[1])){
 
                 if(isset($values['progress'])){
@@ -304,7 +292,6 @@ class Curl
 
             #Retorno caso não encontrar proposta
             if( !isset($value[1][0]) ||  empty($value[1][0])) {
-                $this->httpReceita = $values['curlHandle'];
                 throw new \Exception("Nenhuma proposta encontrada!");
             }
 

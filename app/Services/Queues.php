@@ -19,7 +19,6 @@ class Queues extends Curl{
 
             if(isset($values['progress'])) {
                 $consultProposal = $this->getProgress([...$values]);
-            
             }
 
             if($consultProposal['erro']) {
@@ -35,7 +34,7 @@ class Queues extends Curl{
             return [
                 "erro"     =>  true,
                 "response" =>  $e->getMessage(),
-                
+                "algo" => "teste"
             ];
         }
     }
