@@ -21,8 +21,8 @@ class Curl
 
         try{
             $sessionId = $params['sessionId'];
-            $cookiePath = getcwd() . '/Cookies/';
-            $this->cookieFile = $cookiePath."SANTANDER-CURLCOOKIE".'_'.$sessionId;
+            $cookiePath = getcwd() . '/Cookies';
+            $this->cookieFile = $cookiePath."/SANTANDER-CURLCOOKIE".'_'.$sessionId;
 
             ### Inicio do CURL
             $this->httpReceita = curl_init();

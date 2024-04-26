@@ -2,23 +2,24 @@
 
 namespace App\Services;
 
+use App\Helpers\QueueParams;
 use App\Services\Curl;
 use App\Services\BankLogin;
-
 
 class Queues extends Curl{
 
     public function getQueue($values):array {
 
         try{
-            $login = (new BankLogin)->login();
-            $params = $this->getProposalStatus([...$values, ...$login]);
-            $consultProposal = $this->getFinished([...$params]);
+            $consultProposal = '';
 
-            if (isset($consultProposal['mensagem'])) {
-                $login = (new BankLogin)->login();
-                $params = $this->getProposalStatus([...$values, ...$login]);
-                $consultProposal = $this->getProgress([...$params]);
+            if (isset($values['finished'])) {
+                $consultProposal = $this->getFinished([...$values]);
+            }
+
+            if(isset($values['progress'])) {
+                $consultProposal = $this->getProgress([...$values]);
+            
             }
 
             if($consultProposal['erro']) {
@@ -33,17 +34,10 @@ class Queues extends Curl{
         }catch (\Exception $e){
             return [
                 "erro"     =>  true,
-                "response" =>  $e->getMessage()
+                "response" =>  $e->getMessage(),
+                
             ];
         }
-    }
-
-    private function getProposalStatus($values): array {
-        return [
-            "propostaId" => $values['propostaId'],
-            "curlHandle" => $values['response'],
-            "cookieFile" => $values['cookieFile']
-        ];
     }
 
     private function getFinished($values):array {
@@ -62,7 +56,7 @@ class Queues extends Curl{
         }catch (\Exception $e){
             return [
                 "erro"     =>  true,
-                "mensagem" =>  $e->getMessage()
+                "mensagem" =>  $e->getMessage(),
             ];
         }
     }
