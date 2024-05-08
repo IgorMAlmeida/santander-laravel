@@ -15,7 +15,6 @@ class SantanderController extends Controller
     {
         try {
             session_start();
-            
             $params = [
                 "propostaId" => $request->input('propostaId'),
             ];
@@ -25,6 +24,7 @@ class SantanderController extends Controller
             $getProposalData = (new Queues)->getQueue([...$queueParams,'finished' => true]);
 
             if($getProposalData['erro']){
+                $login = (new BankLogin)->login();
                 $queueParams = (new QueueParams())->setQueueParams([...$params, ...$login]);
                 $getProposalData = (new Queues)->getQueue([...$queueParams, 'progress' => true]);
             }
@@ -33,7 +33,7 @@ class SantanderController extends Controller
                 throw new \Exception($getProposalData['response']);
             }
 
-            unlink($login['cookieFile']);
+            // unlink($login['cookieFile']);
             return response()->json([
                 "erro"  =>  false,
                 "dados" =>  [

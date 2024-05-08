@@ -34,7 +34,6 @@ class Queues extends Curl{
             return [
                 "erro"     =>  true,
                 "response" =>  $e->getMessage(),
-                "algo" => "teste"
             ];
         }
     }
