@@ -51,6 +51,10 @@ class Curl
                 throw new \Exception('Não foi possivel fazer login. Verifique usuário e senha e tente novamente.');
             }
 
+            if(preg_match("/Erro ao recuperar grupos associados ao usu/", $return)){
+                throw new \Exception('Não foi possivel fazer login. Verifique usuário e senha e tente novamente.');
+            }
+
             ### Valida no portal com o TOKEN criado
             curl_setopt($this->httpReceita,CURLOPT_URL, trim($window[1][0]));
             $return = curl_exec($this->httpReceita);

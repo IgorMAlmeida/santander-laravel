@@ -20,11 +20,18 @@ class SantanderController extends Controller
             ];
 
             $login = (new BankLogin)->login();
+            if($login['erro']){
+                throw new \Exception($login['response']);
+            }
+
             $queueParams = (new QueueParams())->setQueueParams([...$params, ...$login]);
             $getProposalData = (new Queues)->getQueue([...$queueParams,'finished' => true]);
 
             if($getProposalData['erro']){
                 $login = (new BankLogin)->login();
+                if($login['erro']){
+                    throw new \Exception($login['response']);
+                }
                 $queueParams = (new QueueParams())->setQueueParams([...$params, ...$login]);
                 $getProposalData = (new Queues)->getQueue([...$queueParams, 'progress' => true]);
             }

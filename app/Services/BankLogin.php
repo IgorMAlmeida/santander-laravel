@@ -6,7 +6,7 @@ use App\Services\Curl;
 
 class BankLogin extends Curl{
 
-   private string $login = "EX114960";
+   private string $login = "EX11496";
    private string $password = "CF@2030";
    
    public function login():array {
