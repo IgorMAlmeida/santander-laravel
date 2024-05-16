@@ -51,7 +51,9 @@ class SantanderController extends Controller
         }catch (\Exception $e) {
             return [
                 "erro"  =>  true,
-                "dados" =>  $e->getMessage()
+                "dados" =>  [
+                    "mensagem" => $e->getMessage()
+                ]
             ];
         }
     }
