@@ -13,9 +13,9 @@ class SantanderController extends Controller
 {
     public function Esteira(Request $request)
     {
-        // $retryCounter = 1;
-        // $maxRetries = 1;
-        // while($retryCounter <= $maxRetries){
+        $retryCounter = 1;
+        $maxRetries = 10;
+        while($retryCounter <= $maxRetries){
 
             try {
                 session_start();
@@ -53,11 +53,11 @@ class SantanderController extends Controller
                 ]);
 
             }catch (\Exception $e) {
-                // if($retryCounter < $maxRetries){
-                //     session_destroy();
-                //     $retryCounter++;
-                //     continue;
-                // }
+                if($retryCounter < $maxRetries){
+                    session_destroy();
+                    $retryCounter++;
+                    continue;
+                }
                 return [
                     "erro"  =>  true,
                     "dados" =>  [
@@ -65,6 +65,6 @@ class SantanderController extends Controller
                     ]
                 ];
             }
-        // }
+        }
     }
 }
