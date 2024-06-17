@@ -13,48 +13,58 @@ class SantanderController extends Controller
 {
     public function Esteira(Request $request)
     {
-        try {
-            session_start();
-            $params = [
-                "propostaId" => $request->input('propostaId'),
-            ];
+        $retryCounter = 1;
+        $maxRetries = 10;
+        while($retryCounter <= $maxRetries){
 
-            $login = (new BankLogin)->login();
-            if($login['erro']){
-                throw new \Exception($login['response']);
-            }
+            try {
+                session_start();
+                $params = [
+                    "propostaId" => $request->input('propostaId'),
+                ];
 
-            $queueParams = (new QueueParams())->setQueueParams([...$params, ...$login]);
-            $getProposalData = (new Queues)->getQueue([...$queueParams,'finished' => true]);
-
-            if($getProposalData['erro']){
                 $login = (new BankLogin)->login();
                 if($login['erro']){
                     throw new \Exception($login['response']);
                 }
+
                 $queueParams = (new QueueParams())->setQueueParams([...$params, ...$login]);
-                $getProposalData = (new Queues)->getQueue([...$queueParams, 'progress' => true]);
+                $getProposalData = (new Queues)->getQueue([...$queueParams,'finished' => true]);
+
+                if($getProposalData['erro']){
+                    $login = (new BankLogin)->login();
+                    if($login['erro']){
+                        throw new \Exception($login['response']);
+                    }
+                    $queueParams = (new QueueParams())->setQueueParams([...$params, ...$login]);
+                    $getProposalData = (new Queues)->getQueue([...$queueParams, 'progress' => true]);
+                }
+
+                if($getProposalData['erro']){
+                    throw new \Exception($getProposalData['response']);
+                }
+
+                // unlink($login['cookieFile']);
+                return response()->json([
+                    "erro"  =>  false,
+                    "dados" =>  [
+                        'propostas' => $getProposalData['propostas']
+                    ],
+                ]);
+
+            }catch (\Exception $e) {
+                if($retryCounter < $maxRetries){
+                    session_destroy();
+                    $retryCounter++;
+                    continue;
+                }
+                return [
+                    "erro"  =>  true,
+                    "dados" =>  [
+                        "mensagem" => $e->getMessage()
+                    ]
+                ];
             }
-
-            if($getProposalData['erro']){
-                throw new \Exception($getProposalData['response']);
-            }
-
-            // unlink($login['cookieFile']);
-            return response()->json([
-                "erro"  =>  false,
-                "dados" =>  [
-                    'propostas' => $getProposalData['propostas']
-                ],
-            ]);
-
-        }catch (\Exception $e) {
-            return [
-                "erro"  =>  true,
-                "dados" =>  [
-                    "mensagem" => $e->getMessage()
-                ]
-            ];
         }
     }
 }
