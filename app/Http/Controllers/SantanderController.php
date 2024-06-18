@@ -14,7 +14,7 @@ class SantanderController extends Controller
     public function Esteira(Request $request)
     {
         $retryCounter = 1;
-        $maxRetries = 10;
+        $maxRetries = 3;
         while($retryCounter <= $maxRetries){
 
             try {
